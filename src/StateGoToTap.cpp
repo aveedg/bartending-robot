@@ -1,43 +1,57 @@
 #include "StateGoToTap.h"
 #include "Context.h"
-#include "StateTapDown.h"
+#include "StateTap.h"
 #include "Robot.h"
-
-int distanceToTap = 5; // mm
-int flag = 0;
-int angle = 90;
 
 StateGoToTap::StateGoToTap(int distance)
 {
-    distance_ = distance;
+    flag = 0;
+    distanceToTap = distance;
+    ctx_->robot_->indicatorLED(0x1F);
 }
 
 void StateGoToTap::enter()
 {
+    ctx_->robot_->resetDistance();
+    ctx_->robot_->writeMotors(-150, -150);
 }
 void StateGoToTap::update()
 {
-    ctx_->robot_->resetDistance();
     switch (flag)
     {
     case 0:
-        if (ctx_->robot_->getDistance() < distance_)
-            ctx_->robot_->lineFollow();
-        else
+        if (ctx_->robot_->getDistance() > distance)
+        {
+            ctx_->robot_->resetDistance();
+            ctx_->robot_->writeMotors(0, 150);
             flag++;
+        }
         break;
     case 1:
-        if (ctx_->robot_->getAngle() < angle)
-            ctx_->robot_->pivotLeft();
-        else
-            flag++;
-        break;
-
-    case 2:
-        if (ctx_->robot_->getDistance() < distanceToTap)
+        if (ctx_->robot_->getAngle() > angle)
+        {
             ctx_->robot_->lineFollow();
-        else
-            ctx_->transitionTo(new StateTapDown);
+            flag++;
+        }
+        break;
+    case 2:
+        if (ctx_->robot_->getDistance() > distanceToTap)
+        {
+            ctx_->robot_->resetDistance();
+            ctx_->robot_->writeMotors(150, 0);
+            flag++;
+        }
+        break;
+    case 3:
+        if (ctx_->robot_->getAngle() > angle)
+        {
+            ctx_->robot_->lineFollow();
+            flag++;
+        }
+        break;
+    case 4:
+        if (ctx_->robot_->getDistance() > distanceToTap)
+            ctx_->transitionTo(new StateTap);
         break;
     }
 }

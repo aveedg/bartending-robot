@@ -1,17 +1,12 @@
-#include "StateTapUp.h"
+#include "StateTap.h"
 #include "Context.h"
 #include "StateBackToMenu.h"
 #include "Robot.h"
 #include "StateReadMenu.h"
 
-int flag = 0;
-float angle = 90;
-float distance = 5;
-float distance1 = 10;
-float distance2 = 5;
-
 void StateBackToMenu::enter()
 {
+    ctx_->robot_->indicatorLED(0xFF);
 }
 void StateBackToMenu::update()
 {
@@ -19,14 +14,14 @@ void StateBackToMenu::update()
     {
     case 0:
         if (ctx_->robot_->getDistance() < distance)
-            ctx_->robot_->backwardLineFollow();
+            ctx_->robot_->backwardLineFollow(); // might not work because of wheel position
         else
             flag++;
         break;
 
     case 1:
         if (ctx_->robot_->getAngle() < angle)
-            ctx_->robot_->pivotLeft();
+            ctx_->robot_->writeMotors(150, 0); // turn left
         else
             flag++;
         break;
@@ -40,7 +35,7 @@ void StateBackToMenu::update()
 
     case 3:
         if (ctx_->robot_->getAngle() < angle)
-            ctx_->robot_->pivotRight();
+            ctx_->robot_->writeMotors(0, 150); // turn right
         else
             flag++;
         break;

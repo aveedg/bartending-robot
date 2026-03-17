@@ -12,7 +12,7 @@
 
 void StateSong::enter()
 {
-    ctx_->robot_->pivotLeft();
+    ctx_->robot_->writeMotors(150, 0);
 }
 void StateSong::update()
 {

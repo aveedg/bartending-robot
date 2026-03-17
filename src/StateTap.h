@@ -1,9 +1,9 @@
-#ifndef STATETAPUP_H
-#define STATETAPUP_H
+#ifndef STATETAP_H
+#define STATETAP_H
 
 #include "State.h"
 
-class StateTapUp : public State
+class StateTap : public State
 {
 public:
     void enter() override;

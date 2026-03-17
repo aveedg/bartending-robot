@@ -12,7 +12,10 @@ public:
     void exit() override;
 
 private:
-    int distance_;
+    int distance = 5;
+    int flag = 0;
+    float distanceToTap;
+    float angle = 90.00;
 };
 
 #endif

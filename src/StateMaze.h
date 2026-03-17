@@ -5,6 +5,9 @@
 
 class StateMaze : public State
 {
+private:
+    int flag;
+
 public:
     void enter() override;
     void update() override;

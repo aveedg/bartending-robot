@@ -5,6 +5,12 @@
 
 class StateGoToMenu : public State
 {
+private:
+    int flag = 0;
+    float angle = 90;
+    float distance = 310;
+    float distance1 = 110;
+
 public:
     void enter() override;
     void update() override;

@@ -5,6 +5,7 @@
 
 #define PHOTOIN A8
 #define CLOCK_IN 45
+#define BEER_LEVEL A15
 
 #define LINE_SENSOR_1 A0
 #define LINE_SENSOR_2 A1
@@ -17,14 +18,14 @@
 
 #define DEBUG_MOTOR_LED
 
-#define LINE_FOLLOW_LED_1 46
-#define LINE_FOLLOW_LED_2 47
-#define LINE_FOLLOW_LED_3 48
-#define LINE_FOLLOW_LED_4 49
-#define LINE_FOLLOW_LED_5 50
-#define LINE_FOLLOW_LED_6 51
-#define LINE_FOLLOW_LED_7 52
-#define LINE_FOLLOW_LED_8 53
+#define LINE_FOLLOW_LED_1 22
+#define LINE_FOLLOW_LED_2 23
+#define LINE_FOLLOW_LED_3 24
+#define LINE_FOLLOW_LED_4 25
+#define LINE_FOLLOW_LED_5 26
+#define LINE_FOLLOW_LED_6 27
+#define LINE_FOLLOW_LED_7 28
+#define LINE_FOLLOW_LED_8 29
 
 #define LEFT_A 2
 #define LEFT_B 3
@@ -145,14 +146,15 @@
 class Robot
 {
 private:
-    void writeMotors(int r, int l);
     void mytone(int freq, long tonelength);
+
+    int16_t prev_error = 0;
+    int16_t int_err = 0;
+    int16_t prev_D = 0;
 
 public:
     void begin();
     void lineFollow();
-    void spinLeft();
-    void spinRight();
     bool lineLost();
     bool clockIn();
     void indicatorLED(uint8_t parameter);
@@ -160,15 +162,18 @@ public:
     float getDistance();
     void resetDistance();
     float getAngle();
-    void pivotLeft();
-    void pivotRight();
     void backwardLineFollow();
-    void moveArm();
-    int checkFull();
+    void tapDown();
+    void tapUp();
+    bool checkFull();
     void isr0();
     void isr1();
     void playSong();
     void calibrate();
+    bool senseLineRight();
+    bool senseLineLeft();
+    void writeMotors(int r, int l);
+    bool beerFull();
 };
 
 #endif
