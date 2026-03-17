@@ -4,6 +4,8 @@
 
 void StateTapDown::enter()
 {
+    ctx_->robot_->closeClaw();
+    ctx_->robot_->pullString();
 }
 void StateTapDown::update()
 {

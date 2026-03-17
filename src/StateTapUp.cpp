@@ -5,6 +5,8 @@
 
 void StateTapUp::enter()
 {
+    ctx_->robot_->releaseString();
+    ctx_->robot_->openClaw();
 }
 void StateTapUp::update()
 {
