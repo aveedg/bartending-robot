@@ -76,6 +76,9 @@ void Robot::begin()
     attachInterrupt(5, isr1_wrapper, RISING);
     qtr.setTypeRC();
     qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5, A6, A7}, 8);
+    clawServo.attach(CLAW_SERVO_PIN);
+    openClaw();
+    initStringServo();
 }
 
 void Robot::calibrate()
@@ -462,10 +465,46 @@ void Robot::initLineFollow()
     prev_error = error;
     int_err = 0;
 }
-void Robot::tapDown()
-{
+
+Robot::Robot(uint8_t servoPin) : servoPin_(servoPin) {}
+
+void Robot::initStringServo() {
+  shoulderServo_.attach(servoPin_, SERVO_MIN_US, SERVO_MAX_US);
+  releaseString();
 }
 
-void Robot::tapUp()
-{
+void Robot::pullString() {
+  setServoAngle(STRING_PULL_ANGLE);
 }
+
+void Robot::releaseString() {
+  setServoAngle(STRING_LOOSE_ANGLE);
+}
+
+int Robot::angleToPulseUs(int angleDeg) const {
+  angleDeg = constrain(angleDeg, 0, SERVO_TRAVEL_DEG);
+  if (SERVO_REVERSED) {
+    return map(angleDeg, 0, SERVO_TRAVEL_DEG, SERVO_WORK_MAX_US, SERVO_WORK_MIN_US);
+  }
+  return map(angleDeg, 0, SERVO_TRAVEL_DEG, SERVO_WORK_MIN_US, SERVO_WORK_MAX_US);
+}
+
+void Robot::setServoAngle(uint8_t angleDeg) {
+  shoulderServo_.writeMicroseconds(angleToPulseUs(angleDeg));
+}
+
+void Robot::closeClaw()
+{
+    clawServo.write(0);
+    delay(500);
+}
+
+void Robot::openClaw()
+{
+    // Open claw by moving servo to 180 deg
+    clawServo.write(180);
+    delay(500);
+}
+
+
+

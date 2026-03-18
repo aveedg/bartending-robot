@@ -2,6 +2,7 @@
 #define ROBOT_H
 
 #include <Arduino.h>
+#include <Servo.h>
 
 #define PHOTOIN A8
 #define CLOCK_IN 45
@@ -143,6 +144,9 @@
 #define NOTE_D8 4699
 #define NOTE_DS8 4978
 
+#define CLAW_SERVO_PIN 6
+#define STRING_SERVO_PIN 7
+
 class Robot
 {
 private:
@@ -159,6 +163,24 @@ private:
     int base = 150;
     int prev_millis = 0;
     int time_var = 20;
+
+    //Jp and aveed servo (rest of the private)
+    Servo clawServo;
+    int angleToPulseUs(int angleDeg) const;
+    void setServoAngle(uint8_t angleDeg);
+
+    Servo shoulderServo_;
+    uint8_t servoPin_;
+
+    static constexpr int SERVO_MIN_US = 500;
+    static constexpr int SERVO_MAX_US = 2500;
+    static constexpr int SERVO_WORK_MIN_US = 1000;
+    static constexpr int SERVO_WORK_MAX_US = 2000;
+    static constexpr uint8_t SERVO_TRAVEL_DEG = 270;
+    static constexpr bool SERVO_REVERSED = true;
+
+    static constexpr uint8_t STRING_LOOSE_ANGLE = SERVO_TRAVEL_DEG / 2; // release
+    static constexpr uint8_t STRING_PULL_ANGLE = 15;                    // pull
 
 public:
     void begin();
@@ -182,6 +204,21 @@ public:
     void writeMotors(int r, int l);
     bool beerFull();
     void initLineFollow();
+
+
+    //jp and aveed
+    explicit Robot(uint8_t servoPin = 13);
+
+    // Call once from your Robot setup/init path.
+    void initStringServo();
+    void pullString();
+    void releaseString();
+
+    void closeClaw();
+    void openClaw();
 };
+
+
+
 
 #endif

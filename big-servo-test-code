@@ -1,0 +1,153 @@
+#include <Arduino.h>
+#include <Servo.h>
+
+// Angles needed for actuation is string loose = midepoint angle (9) and string tight = 0-degrees (0)
+
+Servo shoulderServo;
+
+// Change this to whichever Mega pin your servo signal wire is on.
+constexpr uint8_t SERVO_PIN = 13;
+
+// Control specification.
+constexpr int SERVO_MIN_US = 500;
+constexpr int SERVO_MAX_US = 2500;
+constexpr int SERVO_NEUTRAL_US = 1500;
+constexpr uint8_t SERVO_TRAVEL_DEG = 270; // Set to 270 if your servo is the 270-degree model.
+constexpr int DEAD_ZONE_US = 3;
+constexpr uint16_t CONTROL_FREQ_HZ = 50; // Mega Servo library refresh is about 50 Hz.
+
+constexpr uint8_t MIN_ANGLE = 0;
+constexpr uint8_t MAX_ANGLE = SERVO_TRAVEL_DEG;
+constexpr uint16_t STEP_DELAY_MS = 15;
+constexpr uint16_t END_HOLD_MS = 1000;
+constexpr int SWEEP_STEP_US = 10;
+constexpr int SAFE_LOW_US = 1000;
+constexpr int SAFE_HIGH_US = 2000;
+constexpr uint8_t STATUS_LED_PIN = 13;
+
+int currentPulseUs = SERVO_NEUTRAL_US;
+
+int angleToPulseUs(int angleDeg) {
+  angleDeg = constrain(angleDeg, MIN_ANGLE, MAX_ANGLE);
+  return map(angleDeg, MIN_ANGLE, MAX_ANGLE, SERVO_MIN_US, SERVO_MAX_US);
+}
+
+void setPulseUs(int targetPulseUs) {
+  targetPulseUs = constrain(targetPulseUs, SERVO_MIN_US, SERVO_MAX_US);
+  if (abs(targetPulseUs - currentPulseUs) < DEAD_ZONE_US) {
+    Serial.println("Ignored (inside dead zone)");
+    return;
+  }
+
+  shoulderServo.writeMicroseconds(targetPulseUs);
+  currentPulseUs = targetPulseUs;
+  Serial.print("Pulse set to ");
+  Serial.print(currentPulseUs);
+  Serial.println(" us");
+}
+
+void printHelp() {
+  Serial.println("Commands:");
+  Serial.println("  1 = sweep min->max->min");
+  Serial.println("  c = neutral (1500 us)");
+  Serial.println("  m = minimum pulse (500 us)");
+  Serial.println("  x = maximum pulse (2500 us)");
+  Serial.println("  0 = 0 degrees");
+  Serial.println("  9 = midpoint angle");
+  Serial.println("  8 = max angle");
+  Serial.println("  h = help");
+}
+
+void runSweep() {
+  Serial.println("Moving: min pulse -> max pulse");
+  for (int pulseUs = SERVO_MIN_US; pulseUs <= SERVO_MAX_US; pulseUs += SWEEP_STEP_US) {
+    shoulderServo.writeMicroseconds(pulseUs);
+    currentPulseUs = pulseUs;
+    delay(STEP_DELAY_MS);
+  }
+
+  delay(END_HOLD_MS);
+
+  Serial.println("Moving: max pulse -> min pulse");
+  for (int pulseUs = SERVO_MAX_US; pulseUs >= SERVO_MIN_US; pulseUs -= SWEEP_STEP_US) {
+    shoulderServo.writeMicroseconds(pulseUs);
+    currentPulseUs = pulseUs;
+    delay(STEP_DELAY_MS);
+  }
+
+  delay(END_HOLD_MS);
+  Serial.println("Move complete");
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(STATUS_LED_PIN, OUTPUT);
+  shoulderServo.attach(SERVO_PIN, SERVO_MIN_US, SERVO_MAX_US);
+  setPulseUs(SERVO_NEUTRAL_US);
+  delay(END_HOLD_MS);
+
+  Serial.println("Servo ready.");
+  Serial.print("Signal pin: ");
+  Serial.println(SERVO_PIN);
+  Serial.print("Range: ");
+  Serial.print(SERVO_MIN_US);
+  Serial.print(" to ");
+  Serial.print(SERVO_MAX_US);
+  Serial.println(" us");
+  Serial.print("Neutral: ");
+  Serial.print(SERVO_NEUTRAL_US);
+  Serial.println(" us");
+  Serial.print("Travel set to: ");
+  Serial.print(SERVO_TRAVEL_DEG);
+  Serial.println(" degrees");
+  Serial.print("Control frequency: ");
+  Serial.print(CONTROL_FREQ_HZ);
+  Serial.println(" Hz");
+  printHelp();
+
+  // Automatic self-test on boot so you can verify motion without typing commands.
+  Serial.println("Boot self-test: neutral -> safe low -> safe high -> neutral");
+  setPulseUs(SAFE_LOW_US);
+  delay(1200);
+  setPulseUs(SAFE_HIGH_US);
+  delay(1200);
+  setPulseUs(SERVO_NEUTRAL_US);
+  delay(1200);
+  Serial.println("Boot self-test complete");
+}
+
+void loop() {
+  static uint32_t lastBlinkMs = 0;
+  if (millis() - lastBlinkMs >= 500) {
+    digitalWrite(STATUS_LED_PIN, !digitalRead(STATUS_LED_PIN));
+    lastBlinkMs = millis();
+  }
+
+  if (Serial.available() > 0) {
+    const char cmd = Serial.read();
+
+    if (cmd == '1') {
+      runSweep();
+    } else if (cmd == 'c') {
+      setPulseUs(SERVO_NEUTRAL_US);
+    } else if (cmd == 'm') {
+      setPulseUs(SERVO_MIN_US);
+    } else if (cmd == 'x') {
+      setPulseUs(SERVO_MAX_US);
+    } else if (cmd == '0') {
+      setPulseUs(angleToPulseUs(0));
+    } else if (cmd == '9') {
+      setPulseUs(angleToPulseUs(MAX_ANGLE / 2));
+    } else if (cmd == '8') {
+      setPulseUs(angleToPulseUs(MAX_ANGLE));
+    } else if (cmd == 'h') {
+      printHelp();
+    } else if (cmd == '\n' || cmd == '\r') {
+      // Ignore line endings from Serial Monitor.
+    } else {
+      Serial.print("Unknown command: ");
+      Serial.println(cmd);
+      printHelp();
+    }
+  }
+}
