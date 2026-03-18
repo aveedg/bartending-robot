@@ -88,7 +88,7 @@ void Robot::calibrate()
     for (uint8_t i = 0; i < 250; i++)
     {
         qtr.calibrate();
-        delay(20);
+        delay(5);
     }
 
     for (int i = 22; i < 30; i++)
@@ -99,69 +99,139 @@ void Robot::calibrate()
 
 void Robot::lineFollow()
 {
-    uint16_t sensors[8];
-    int16_t error = 0;
-    int16_t der_err = 0;
-    float Kp = 0.03;
-    float Ki = 0;
-    float Kd = 0.01;
-    int base = 150;
 
-    qtr.readCalibrated(sensors);
-
-    int16_t position = qtr.readLineBlack(sensors);
-    Serial.println(position);
-
-    prev_error = error;
-    error = (position - 3500);
-    int_err = int_err + error;
-    der_err = (error - prev_error);
-
-    int16_t P = Kp * error;
-    int16_t I = Ki * int_err;
-    int16_t D = Kd * der_err;
-
-    int16_t control = P + I + D; // want ~200 at max error
-
-    int leftMotorSpeed = base - control;
-    int rightMotorSpeed = base + control;
-
-    writeMotors(rightMotorSpeed, leftMotorSpeed);
-
-    for (int i = 0; i < 8; i++)
+    if (millis() - prev_millis > time_var)
     {
-        if (sensors[i] > 750)
-            digitalWrite(LINE_FOLLOW_LED_1 + i, LOW);
-        else
-            digitalWrite(LINE_FOLLOW_LED_1 + i, HIGH);
+        qtr.readCalibrated(sensors);
+
+        int16_t position = qtr.readLineBlack(sensors);
+
+        prev_error = error;
+        error = (position - 3500);
+        int_err = int_err + error;
+        der_err = (error - prev_error);
+
+        int16_t P = Kp * error;
+        int16_t I = Ki * int_err;
+        int16_t D = (Kd * der_err) / time_var;
+
+        int16_t control = P + I + D; // want ~200 at max error
+
+        int leftMotorSpeed = base - control;
+        int rightMotorSpeed = base + control;
+
+        Serial.print(error);
+        Serial.print(", ");
+        Serial.print(P);
+        Serial.print(", ");
+        Serial.println(D);
+
+        // Serial.print("Left:");
+        // Serial.println(leftMotorSpeed);
+        // Serial.print("Right:");
+        // Serial.println(rightMotorSpeed);
+
+        writeMotors(leftMotorSpeed, rightMotorSpeed);
+    }
+
+    if (sensors[0] > 750)
+    {
+        digitalWrite(LINE_FOLLOW_LED_1, LOW);
+    }
+    else
+    {
+        digitalWrite(LINE_FOLLOW_LED_1, HIGH);
+    }
+
+    if (sensors[1] > 750)
+    {
+        digitalWrite(LINE_FOLLOW_LED_2, LOW);
+    }
+    else
+    {
+        digitalWrite(LINE_FOLLOW_LED_2, HIGH);
+    }
+
+    if (sensors[2] > 750)
+    {
+        digitalWrite(LINE_FOLLOW_LED_3, LOW);
+    }
+    else
+    {
+        digitalWrite(LINE_FOLLOW_LED_3, HIGH);
+    }
+    if (sensors[3] > 750)
+    {
+        digitalWrite(LINE_FOLLOW_LED_4, LOW);
+    }
+    else
+    {
+        digitalWrite(LINE_FOLLOW_LED_4, HIGH);
+    }
+    if (sensors[4] > 750)
+    {
+        digitalWrite(LINE_FOLLOW_LED_5, LOW);
+    }
+    else
+    {
+        digitalWrite(LINE_FOLLOW_LED_5, HIGH);
+    }
+    if (sensors[5] > 750)
+    {
+        digitalWrite(LINE_FOLLOW_LED_6, LOW);
+    }
+    else
+    {
+        digitalWrite(LINE_FOLLOW_LED_6, HIGH);
+    }
+    if (sensors[6] > 750)
+    {
+        digitalWrite(LINE_FOLLOW_LED_7, LOW);
+    }
+    else
+    {
+        digitalWrite(LINE_FOLLOW_LED_7, HIGH);
+    }
+    if (sensors[7] > 750)
+    {
+        digitalWrite(LINE_FOLLOW_LED_8, LOW);
+    }
+    else
+    {
+        digitalWrite(LINE_FOLLOW_LED_8, HIGH);
     }
 }
 
-void Robot::writeMotors(int rightMotorSpeed, int leftMotorSpeed)
+void Robot::writeMotors(int leftMotorSpeed, int rightMotorSpeed)
 {
     leftMotorSpeed = constrain(leftMotorSpeed, -255, 255);
     rightMotorSpeed = constrain(rightMotorSpeed, -255, 255);
 
     if (leftMotorSpeed < 0)
     {
-        digitalWrite(IN_3, LOW);
-        digitalWrite(IN_4, HIGH);
-    }
-    else if (leftMotorSpeed > 0)
-    {
-        digitalWrite(IN_3, HIGH);
-        digitalWrite(IN_4, LOW);
-    }
-    if (rightMotorSpeed < 0)
-    {
         digitalWrite(11, LOW);
         digitalWrite(12, HIGH);
     }
-    else if (rightMotorSpeed > 0)
+    else if (leftMotorSpeed > 0)
     {
         digitalWrite(11, HIGH);
         digitalWrite(12, LOW);
     }
+    if (rightMotorSpeed < 0)
+    {
+        digitalWrite(9, LOW);
+        digitalWrite(10, HIGH);
+    }
+    else if (rightMotorSpeed > 0)
+    {
+        digitalWrite(9, HIGH);
+        digitalWrite(10, LOW);
+    }
+
+    Serial.print("right: ");
+    Serial.println(rightMotorSpeed);
+    Serial.print("left: ");
+    Serial.println(leftMotorSpeed);
 
     analogWrite(13, abs(leftMotorSpeed));
     analogWrite(8, abs(rightMotorSpeed));
@@ -169,7 +239,6 @@ void Robot::writeMotors(int rightMotorSpeed, int leftMotorSpeed)
 
 bool Robot::lineLost()
 {
-    uint16_t sensors[8];
     qtr.readCalibrated(sensors);
 
     for (int i = 0; i < 8; i++)
@@ -224,11 +293,11 @@ int Robot::readColor()
     return closestColor;
 }
 
-void Robot::indicatorLED(uint8_t indicator)
+void Robot::indicatorLED(uint8_t parameter)
 {
     for (int i = 0; i < 8; i++)
     {
-        digitalWrite(46 + i, (indicator >> i) & 1);
+        digitalWrite(INDICATOR_LED_1 + i, (parameter >> i) & 1);
     }
 }
 
@@ -295,49 +364,6 @@ void Robot::resetDistance()
     countr = 0;
     countl = 0;
     interrupts();
-}
-
-void Robot::backwardLineFollow()
-{
-    uint16_t sensors[8];
-    int16_t error = 0;
-    int16_t der_err = 0;
-
-    float Kp = 0.03;
-    float Ki = 0;
-    float Kd = 0;
-
-    int base = 150;
-
-    qtr.readCalibrated(sensors);
-
-    int16_t position = qtr.readLineBlack(sensors);
-    Serial.println(position);
-
-    prev_error = error;
-    error = (position - 3500);
-
-    int_err = int_err + error;
-    der_err = (error - prev_error);
-
-    int16_t P = Kp * error;
-    int16_t I = Ki * int_err;
-    int16_t D = Kd * der_err;
-
-    int16_t control = P + I + D;
-
-    int leftMotorSpeed = -base + control;
-    int rightMotorSpeed = -base - control;
-
-    writeMotors(rightMotorSpeed, leftMotorSpeed);
-
-    for (int i = 0; i < 8; i++)
-    {
-        if (sensors[i] > 750)
-            digitalWrite(LINE_FOLLOW_LED_1 + i, LOW);
-        else
-            digitalWrite(LINE_FOLLOW_LED_1 + i, HIGH);
-    }
 }
 
 bool Robot::checkFull()
@@ -428,6 +454,14 @@ bool Robot::beerFull()
         return false;
 }
 
+void Robot::initLineFollow()
+{
+    int16_t position = qtr.readLineBlack(sensors);
+    error = (position - 3500);
+    der_err = 0;
+    prev_error = error;
+    int_err = 0;
+}
 void Robot::tapDown()
 {
 }

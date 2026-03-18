@@ -18,14 +18,14 @@
 
 #define DEBUG_MOTOR_LED
 
-#define LINE_FOLLOW_LED_1 22
-#define LINE_FOLLOW_LED_2 23
-#define LINE_FOLLOW_LED_3 24
-#define LINE_FOLLOW_LED_4 25
-#define LINE_FOLLOW_LED_5 26
-#define LINE_FOLLOW_LED_6 27
-#define LINE_FOLLOW_LED_7 28
-#define LINE_FOLLOW_LED_8 29
+#define LINE_FOLLOW_LED_1 32 // 22
+#define LINE_FOLLOW_LED_2 33 // 23
+#define LINE_FOLLOW_LED_3 34 // 24
+#define LINE_FOLLOW_LED_4 35 // 25
+#define LINE_FOLLOW_LED_5 36 // 26
+#define LINE_FOLLOW_LED_6 37 // 27
+#define LINE_FOLLOW_LED_7 38 // 28
+#define LINE_FOLLOW_LED_8 39 // 29
 
 #define LEFT_A 2
 #define LEFT_B 3
@@ -44,14 +44,14 @@
 #define GREEN 42
 #define YELLOW 41
 
-#define INDICATOR_LED_1 40
-#define INDICATOR_LED_2 39
-#define INDICATOR_LED_3 38
-#define INDICATOR_LED_4 37
-#define INDICATOR_LED_5 36
-#define INDICATOR_LED_6 35
-#define INDICATOR_LED_7 34
-#define INDICATOR_LED_8 33
+#define INDICATOR_LED_1 29 // 39
+#define INDICATOR_LED_2 28 // 38
+#define INDICATOR_LED_3 27 // 37
+#define INDICATOR_LED_4 26 // 36
+#define INDICATOR_LED_5 25 // 35
+#define INDICATOR_LED_6 24 // 34
+#define INDICATOR_LED_7 23 // 33
+#define INDICATOR_LED_8 22 // 32
 
 #define NOTE_B0 31
 #define NOTE_C1 33
@@ -147,10 +147,18 @@ class Robot
 {
 private:
     void mytone(int freq, long tonelength);
-
+    uint16_t sensors[8];
+    int16_t error = 0;
+    int16_t der_err = 0;
     int16_t prev_error = 0;
     int16_t int_err = 0;
-    int16_t prev_D = 0;
+
+    float Kp = 0.08;
+    float Ki = 0;
+    float Kd = 3;
+    int base = 150;
+    int prev_millis = 0;
+    int time_var = 20;
 
 public:
     void begin();
@@ -162,7 +170,6 @@ public:
     float getDistance();
     void resetDistance();
     float getAngle();
-    void backwardLineFollow();
     void tapDown();
     void tapUp();
     bool checkFull();
@@ -174,6 +181,7 @@ public:
     bool senseLineLeft();
     void writeMotors(int r, int l);
     bool beerFull();
+    void initLineFollow();
 };
 
 #endif

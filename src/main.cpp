@@ -17,5 +17,6 @@ void setup()
 void loop()
 {
   ctx->update();
+  // robot->calibrate();
   // robot->lineFollow();
 }

@@ -14,7 +14,7 @@ void StateBackToMenu::update()
     {
     case 0:
         if (ctx_->robot_->getDistance() < distance)
-            ctx_->robot_->backwardLineFollow(); // might not work because of wheel position
+            ctx_->robot_->writeMotors(-100, -100); // might not work because of wheel position
         else
             flag++;
         break;

@@ -9,7 +9,7 @@ class Context
 private:
     State *currstate_;
     unsigned long startTime;
-    bool timerActive;
+    bool timerActive = false;
 
 public:
     Robot *robot_;

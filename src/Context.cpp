@@ -36,6 +36,7 @@ void Context::update()
     // interrupt after 50 sec
     if (timerActive && (millis() - startTime >= 50000))
     {
+        Serial.print("i am inside an if statement");
         timerActive = false;
         transitionTo(new StateSong);
     }
