@@ -6,7 +6,8 @@
 void StateTap::enter()
 {
     ctx_->robot_->indicatorLED(0x3F);
-    ctx_->robot_->tapDown();
+    ctx_->robot_->closeClaw();
+    ctx_->robot_->pullString();
 }
 void StateTap::update()
 {
@@ -18,4 +19,7 @@ void StateTap::update()
 }
 void StateTap::exit()
 {
+    ctx_->robot_->releaseString();
+    ctx_->robot_->openClaw();
+
 }
